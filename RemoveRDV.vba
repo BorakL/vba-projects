@@ -11,6 +11,10 @@ Sub a()
     Dim maxFontSize As Double
     Dim tempFontSize As Double
     Dim fit As Boolean
+    Dim numChars As Integer
+    Dim colWidth As Double
+    Dim fontSize As Double
+    Dim constant As Double
     
     ' Set the active worksheet
     Set ws = ActiveSheet
@@ -78,4 +82,46 @@ Sub a()
         .LeftMargin = Application.InchesToPoints(0.25)
         .RightMargin = Application.InchesToPoints(0.25)
     End With
+
+    ' Konstant za računanje font size-a
+    constant = 12 ' Možeš promeniti kako bi dobio optimalan rezultat
+
+    ' Maksimalni font size
+    maxFontSize = 60 ' Postavi maksimalnu veličinu fonta
+
+    ' Prvi red - postavljanje font size
+    For Each cell In ws.Rows(1).Cells
+        If cell.Value <> "" Then
+            numChars = Len(cell.Value)
+            colWidth = ws.Columns(cell.Column).ColumnWidth
+
+            ' Izračunaj font size na osnovu broja karaktera i širine kolone
+            fontSize = (colWidth / numChars) * constant
+
+            ' Ograniči maksimalnu veličinu fonta
+            If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
+
+            ' Postavi font size
+            cell.Font.Size = fontSize
+        End If
+    Next cell
+
+    ' Prva kolona - postavljanje font size
+    For Each cell In ws.Columns(1).Cells
+        If cell.Value <> "" Then
+            numChars = Len(cell.Value)
+            colWidth = ws.Columns(1).ColumnWidth
+
+            ' Izračunaj font size na osnovu broja karaktera i širine kolone
+            fontSize = (colWidth / numChars) * constant
+
+            ' Ograniči maksimalnu veličinu fonta
+            If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
+
+            ' Postavi font size
+            cell.Font.Size = fontSize
+        End If
+    Next cell
+
+
 End Sub
