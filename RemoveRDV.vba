@@ -1,127 +1,38 @@
-Sub a()
- Dim ws As Worksheet
-    Dim colCount As Integer
-    Dim rowCount As Integer
-    Dim totalHeightUnits As Double
-    Dim rowHeightUnits As Double
-    Dim i As Integer
-    Dim effectiveHeight As Double
-    Dim rng As Range
-    Dim cell As Range
-    Dim maxFontSize As Double
-    Dim tempFontSize As Double
-    Dim fit As Boolean
-    Dim numChars As Integer
-    Dim colWidth As Double
-    Dim fontSize As Double
-    Dim constant As Double
+Sub removeRDV()
+
+    Dim regex As Object
+    Dim ws As Worksheet
+    Dim lastRow As Long, lastCol As Long
+    Dim i As Long, j As Long
+    Dim cellText As String
+    Dim pattern As String
     
-    ' Set the active worksheet
-    Set ws = ActiveSheet
-
-    ' Get the number of columns and rows in the used range
-    colCount = ws.UsedRange.Columns.Count
-    rowCount = ws.UsedRange.Rows.Count
-
-    ' Efektivna visina A4 stranice u landscape (u Excel jedinicama)
-    ' Prosečna efektivna visina A4 u landscape je oko 80 Excel jedinica
-    effectiveHeight = 800 ' Prilagođeno eksperimentalno za ceo prikaz
-
-    ' Raspodela visine među redovima
-    rowHeightUnits = effectiveHeight / rowCount
-
-    ' Postavljanje visine za svaki red
-    For i = 1 To rowCount
-        ws.Rows(i).RowHeight = rowHeightUnits
+    ' Define the regex pattern
+    pattern = "\(\d+\-(\d+)?[DRV]\)" ' Replace this with your regex pattern
+    
+    ' Create regex object
+    Set regex = CreateObject("VBScript.RegExp")
+    regex.pattern = pattern
+    regex.Global = True ' Allow global matches (multiple matches in a cell)
+    
+    ' Define the worksheet
+    Set ws = ThisWorkbook.Sheets(2) ' Change to your worksheet name or index
+    
+    ' Find the last row and column
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    ' Loop through all cells
+    For i = 1 To lastRow
+        For j = 1 To lastCol
+            cellText = ws.Cells(i, j).Value ' Get cell value
+            If regex.Test(cellText) Then
+                ' Remove regex matches
+                ws.Cells(i, j).Value = regex.Replace(cellText, "")
+            End If
+        Next j
     Next i
-
-    ' Dodatni deo koda za podešavanje širina kolona (već imaš, ali ponavljam za celovitost)
-    Dim firstColWidthUnits As Double
-    Dim otherColsWidthUnits As Double
-    Dim effectiveWidth As Double
-
-    ' A4 landscape effective width in Excel units
-    effectiveWidth = 200 ' Eksperimentalno za širinu cele stranice
-
-    ' Determine width for the first column based on rules
-    Select Case colCount
-        Case Is < 4
-            firstColWidthUnits = 0.66 * effectiveWidth
-        Case Is > 4
-            firstColWidthUnits = 0.33 * effectiveWidth
-        Case 4
-            firstColWidthUnits = 0.5 * effectiveWidth
-    End Select
-
-    ' Distribute remaining width among other columns
-    If colCount > 1 Then
-        otherColsWidthUnits = (effectiveWidth - firstColWidthUnits) / (colCount - 1)
-    End If
-
-    ' Set column widths
-    ws.Columns(1).ColumnWidth = firstColWidthUnits
-    For i = 2 To colCount
-        ws.Columns(i).ColumnWidth = otherColsWidthUnits
-    Next i
-
-    ' Apply borders to the entire used range
-    With ws.UsedRange
-        .Borders.LineStyle = xlContinuous
-        .Borders.Weight = xlThin
-    End With
-
-    ' Set print settings
-    With ws.PageSetup
-        .Orientation = xlLandscape
-        .PaperSize = xlPaperA4
-        .Zoom = False
-        .FitToPagesWide = 1
-        .FitToPagesTall = 1
-        .TopMargin = Application.InchesToPoints(0.25)
-        .BottomMargin = Application.InchesToPoints(0.25)
-        .LeftMargin = Application.InchesToPoints(0.25)
-        .RightMargin = Application.InchesToPoints(0.25)
-    End With
-
-    ' Konstant za računanje font size-a
-    constant = 12 ' Možeš promeniti kako bi dobio optimalan rezultat
-
-    ' Maksimalni font size
-    maxFontSize = 60 ' Postavi maksimalnu veličinu fonta
-
-    ' Prvi red - postavljanje font size
-    For Each cell In ws.Rows(1).Cells
-        If cell.Value <> "" Then
-            numChars = Len(cell.Value)
-            colWidth = ws.Columns(cell.Column).ColumnWidth
-
-            ' Izračunaj font size na osnovu broja karaktera i širine kolone
-            fontSize = (colWidth / numChars) * constant
-
-            ' Ograniči maksimalnu veličinu fonta
-            If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
-
-            ' Postavi font size
-            cell.Font.Size = fontSize
-        End If
-    Next cell
-
-    ' Prva kolona - postavljanje font size
-    For Each cell In ws.Columns(1).Cells
-        If cell.Value <> "" Then
-            numChars = Len(cell.Value)
-            colWidth = ws.Columns(1).ColumnWidth
-
-            ' Izračunaj font size na osnovu broja karaktera i širine kolone
-            fontSize = (colWidth / numChars) * constant
-
-            ' Ograniči maksimalnu veličinu fonta
-            If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
-
-            ' Postavi font size
-            cell.Font.Size = fontSize
-        End If
-    Next cell
-
+    
+    MsgBox "Regex matches cleared from the worksheet!", vbInformation
 
 End Sub
