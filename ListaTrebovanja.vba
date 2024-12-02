@@ -82,6 +82,8 @@ Sub a()
     Dim colWidth As Double
     Dim fontSize As Double
     Dim constant As Double
+    Dim maxAllowedFontSize As Double
+    Dim calculatedFontSize As Double
     
     ' Set the active worksheet
     Set ws = ActiveSheet
@@ -197,10 +199,19 @@ Sub a()
     ' Definiši opseg za promenu fonta (od B2 do poslednje ćelije)
     Set tableRange = ws.Range(ws.Cells(3, 2), ws.Cells(lastRow, lastCol))
 
+    ' Postavi maksimalnu dozvoljenu veličinu fonta
+    maxAllowedFontSize = 72
+
     ' Promeni font za sve ćelije u tabeli
+    If ws.Rows(2).RowHeight > maxAllowedFontSize Then
+            calculatedFontSize = maxAllowedFontSize
+        Else
+            calculatedFontSize = ws.Rows(2).RowHeight
+        End If
+
     With tableRange
         .Font.Name = "Calibri"              ' Postavi font
-        .Font.Size = ws.Rows(2).RowHeight   ' Prilagođena veličina fonta prema visini reda
+        .Font.Size = calculatedFontSize     ' Prilagođena veličina fonta prema visini reda
         .Font.Bold = True                   ' Postavi bold
         .HorizontalAlignment = xlCenter     ' Horizontalno centriranje
         .VerticalAlignment = xlCenter       ' Vertikalno centriranje
@@ -240,7 +251,7 @@ Sub a()
     If ws.Cells(3, lastCol).Value = "UKUPNO" Then
         ws.Columns(lastCol).Interior.Color = RGB(200,200,200)
         With ws.Columns(lastCol)
-            .Font.Size = ws.Rows(2).RowHeight   ' Postavi željenu veličinu fonta
+            .Font.Size = calculatedFontSize   ' Postavi željenu veličinu fonta
             .HorizontalAlignment = xlCenter     ' Centriraj tekst
             .VerticalAlignment = xlCenter       ' Centriraj tekst vertikalno
             .Font.Bold = True                   ' Ako treba, postavi bold
