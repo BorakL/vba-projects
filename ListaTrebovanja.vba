@@ -233,24 +233,24 @@ Sub a()
     shadeColor = RGB(230, 230, 230)  ' Svetlo siva za šrafirane redove
     
     ' Formatiraj zaglavlje (drugi red)
-    With ws.Rows(startRow)
+    With ws.UsedRange.Rows(startRow)
         .Interior.Color = headerColor
     End With
     
     ' Alternativno šrafiranje ostatka tabele
     For rowIndex = startRow + 1 To shadingTableRange.Rows.Count + startRow - 1
         If rowIndex Mod 2 = 0 Then
-            ws.Rows(rowIndex).Interior.Color = shadeColor
+            ws.UsedRange.Rows(rowIndex).Interior.Color = shadeColor
         Else
-            ws.Rows(rowIndex).Interior.Color = xlNone ' Bela pozadina
+            ws.UsedRange.Rows(rowIndex).Interior.Color = xlNone ' Bela pozadina
         End If
     Next rowIndex
 
     ' Ako je poslednja kolona "UKUPNO", primeni željeni font i veličinu fonta
     lastCol = ws.Cells(4, ws.Columns.Count).End(xlToLeft).Column
     If ws.Cells(3, lastCol).Value = "UKUPNO" Then
-        ws.Columns(lastCol).Interior.Color = RGB(200,200,200)
-        With ws.Columns(lastCol)
+        ws.UsedRange.Columns(lastCol).Interior.Color = RGB(200,200,200)
+        With ws.UsedRange.Columns(lastCol)
             .Font.Size = calculatedFontSize   ' Postavi željenu veličinu fonta
             .HorizontalAlignment = xlCenter     ' Centriraj tekst
             .VerticalAlignment = xlCenter       ' Centriraj tekst vertikalno
