@@ -152,11 +152,42 @@ Sub a()
         .RightMargin = Application.InchesToPoints(0.25)
     End With
 
+    
+    ' Nađi poslednji popunjeni red i poslednju popunjenu kolonu
+    lastRow = ws.Cells(ws.Rows.Count, 2).End(xlUp).Row              ' Poslednji red na osnovu druge kolone
+    lastCol = ws.Cells(2, ws.Columns.Count).End(xlToLeft).Column    ' Poslednja kolona na osnovu drugog reda
+
+    Dim regex As Object 
+    Dim cellText As String
+    Dim pattern As String
+    
+    ' Define the regex pattern
+    pattern = "\(\d+\-(\d+)?[DRV]\)" ' Replace this with your regex pattern
+    
+    ' Create regex object
+    Set regex = CreateObject("VBScript.RegExp")
+    regex.pattern = pattern
+    regex.Global = True ' Allow global matches (multiple matches in a cell)
+    
+    ' Loop through all cells
+    For i = 1 To lastRow
+        cellText = ws.Cells(i, 1).Value ' Get cell value
+        If regex.Test(cellText) Then
+            ' Remove regex matches
+            ws.Cells(i, 1).Value = regex.Replace(cellText, "")
+        End If
+    Next i
+
+
+
     ' Konstant za računanje font size-a
     constant = 12 ' Možeš promeniti kako bi dobio optimalan rezultat
 
     ' Maksimalni font size
     maxFontSize = ws.Rows(2).RowHeight * 0.8 ' Postavi maksimalnu veličinu fonta
+
+    ' Postavi maksimalnu dozvoljenu veličinu fonta
+    maxAllowedFontSize = 72
 
     ' Prvi red - postavljanje font size
     For Each cell In ws.Rows(2).Cells
@@ -169,6 +200,7 @@ Sub a()
 
             ' Ograniči maksimalnu veličinu fonta
             If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
+            If lastRow <6 And numChars <11 Then fontSize = maxAllowedFontSize
 
             ' Postavi font size
             cell.Font.Size = fontSize
@@ -186,21 +218,15 @@ Sub a()
 
             ' Ograniči maksimalnu veličinu fonta
             If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
+            If lastRow <6 And numChars <11 Then fontSize = maxAllowedFontSize
 
             ' Postavi font size
             cell.Font.Size = fontSize
         End If
     Next cell
 
-    ' Nađi poslednji popunjeni red i poslednju popunjenu kolonu
-    lastRow = ws.Cells(ws.Rows.Count, 2).End(xlUp).Row              ' Poslednji red na osnovu druge kolone
-    lastCol = ws.Cells(2, ws.Columns.Count).End(xlToLeft).Column    ' Poslednja kolona na osnovu drugog reda
-
     ' Definiši opseg za promenu fonta (od B2 do poslednje ćelije)
     Set tableRange = ws.Range(ws.Cells(3, 2), ws.Cells(lastRow, lastCol))
-
-    ' Postavi maksimalnu dozvoljenu veličinu fonta
-    maxAllowedFontSize = 72
 
     ' Promeni font za sve ćelije u tabeli
     If ws.Rows(2).RowHeight > maxAllowedFontSize Then
@@ -273,5 +299,6 @@ Sub a()
         .HorizontalAlignment = xlCenter      ' Horizontala centriranja
         .VerticalAlignment = xlCenter        ' Vertikalna centriranja
     End With
+    If(lastRow < 6) Then firstRow.Font.Size = maxAllowedFontSize
 
 End Sub
