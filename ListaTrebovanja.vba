@@ -1,4 +1,5 @@
-Sub a()
+Sub trebovnaLista()
+
     Dim ws As Worksheet
     Dim rg As Range
     Dim secondRow As Range
@@ -11,6 +12,10 @@ Sub a()
 
     ' Postavi aktivni radni list
     Set ws = ActiveSheet
+    If ws.Range("A1").value <> "ProChef" Or ws.Range("A2").value <> "#" Then
+        MsgBox "Ovaj dokument nema odgovarajuci format za pravljenje trebovne liste.", vbExclamation, "Greška u formatu"
+        Exit Sub  ' Prekida dalje izvršenje koda
+    End If
     
     ' Definiši opseg tabele
     Set rg = ws.UsedRange ' Ili konkretan opseg ako je poznat, npr. ws.Range("A1:G10")
@@ -54,7 +59,7 @@ Sub a()
             ' Kombinuj kolone A i D za brisanje, obriši prvi red
             Set columnsToDelete = Union(ws.Columns("A"), ws.Columns("D"))
             columnsToDelete.Delete
-            ws.Cells(1,1).value = ws.Cells(2,2).value
+            ws.Cells(1, 1).value = ws.Cells(2, 2).value
     End Select
 
     ' Pronađi ćeliju koja sadrži tekst "ukupno obroka" i zameni sa "UKUPNO"
@@ -157,7 +162,7 @@ Sub a()
     lastRow = ws.Cells(ws.Rows.Count, 2).End(xlUp).Row              ' Poslednji red na osnovu druge kolone
     lastCol = ws.Cells(2, ws.Columns.Count).End(xlToLeft).Column    ' Poslednja kolona na osnovu drugog reda
 
-    Dim regex As Object 
+    Dim regex As Object
     Dim cellText As String
     Dim pattern As String
     
@@ -171,10 +176,10 @@ Sub a()
     
     ' Loop through all cells
     For i = 1 To lastRow
-        cellText = ws.Cells(i, 1).Value ' Get cell value
+        cellText = ws.Cells(i, 1).value ' Get cell value
         If regex.Test(cellText) Then
             ' Remove regex matches
-            ws.Cells(i, 1).Value = regex.Replace(cellText, "")
+            ws.Cells(i, 1).value = regex.Replace(cellText, "")
         End If
     Next i
 
@@ -200,7 +205,7 @@ Sub a()
 
             ' Ograniči maksimalnu veličinu fonta
             If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
-            If lastRow <6 And numChars <11 Then fontSize = maxAllowedFontSize
+            If lastRow < 6 And numChars < 11 Then fontSize = maxAllowedFontSize
 
             ' Postavi font size
             cell.Font.Size = fontSize
@@ -218,7 +223,7 @@ Sub a()
 
             ' Ograniči maksimalnu veličinu fonta
             If fontSize > maxFontSize Then fontSize = Round(maxFontSize)
-            If lastRow <6 And numChars <11 Then fontSize = maxAllowedFontSize
+            If lastRow < 6 And numChars < 11 Then fontSize = maxAllowedFontSize
 
             ' Postavi font size
             cell.Font.Size = fontSize
@@ -274,8 +279,8 @@ Sub a()
 
     ' Ako je poslednja kolona "UKUPNO", primeni željeni font i veličinu fonta
     lastCol = ws.Cells(4, ws.Columns.Count).End(xlToLeft).Column
-    If ws.Cells(3, lastCol).Value = "UKUPNO" Then
-        ws.UsedRange.Columns(lastCol).Interior.Color = RGB(200,200,200)
+    If ws.Cells(3, lastCol).value = "UKUPNO" Then
+        ws.UsedRange.Columns(lastCol).Interior.Color = RGB(200, 200, 200)
         With ws.UsedRange.Columns(lastCol)
             .Font.Size = calculatedFontSize   ' Postavi željenu veličinu fonta
             .HorizontalAlignment = xlCenter     ' Centriraj tekst
@@ -299,6 +304,6 @@ Sub a()
         .HorizontalAlignment = xlCenter      ' Horizontala centriranja
         .VerticalAlignment = xlCenter        ' Vertikalna centriranja
     End With
-    If(lastRow < 6) Then firstRow.Font.Size = maxAllowedFontSize
+    If (lastRow < 6) Then firstRow.Font.Size = maxAllowedFontSize
 
 End Sub
