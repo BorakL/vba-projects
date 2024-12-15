@@ -148,7 +148,7 @@ Sub createShippingDocs()
     Dim foundMlekaCaj As Boolean, foundVanRFZO As Boolean
     
     ' Define the patterns
-    patternMlekaCaj = "\(M\-|\(Č\-|\(C\-"
+    patternMlekaCaj = "\(M\-|\(\u010C\-|\(C\-"
     patternVanRFZO = "VAN RFZO"
     
     ' Create regex objects
