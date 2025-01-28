@@ -293,6 +293,7 @@ Sub proveriOtpremnicu()
     kriterijumi.Add "VAN RFZO", "VAN RFZO"
     kriterijumi.Add "DNEVNA", "DNEVNA BOLNICA"
     kriterijumi.Add "DB", "DNEVNA BOLNICA"
+    kriterijumi.Add "HEMODIJALIZA SENDVI"&ChrW(268)&"I", "DNEVNA BOLNICA"
     kriterijumi.Add ChrW(268) & "-D", "CAJ"
     kriterijumi.Add "M-D", "MLEKO"
     
