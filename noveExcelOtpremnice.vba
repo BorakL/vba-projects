@@ -344,40 +344,16 @@ Sub StampajOtpremnicu()
 '
 ' StampajOtpremnicu Macro
 '
-    Dim currentPage As Long
-    Dim totalPages As Long
-    Dim rng As Range
-    Dim printRange As String
-
-    ' Dobijanje reference na aktivni dokument
-    Dim doc As Worksheet
-    Set doc = ActiveSheet
-
-    ' Provera da li je dokument otvoren
-    If doc Is Nothing Then
-        MsgBox "Nema otvorenog dokumenta.", vbExclamation
-        Exit Sub
-    End If
-
-    ' Dobijanje trenutne stranice
-    Set rng = Selection.Range
-    currentPage = rng.Information(wdActiveEndPageNumber)
-
-    ' Dobijanje ukupnog broja stranica
-    totalPages = doc.BuiltInDocumentProperties(wdPropertyPages)
-
-    ' Provera da li je trenutna stranica validna
-    If currentPage < 1 Or currentPage > totalPages Then
-        MsgBox "Ne postoji trenutna stranica za štampu.", vbExclamation
-        Exit Sub
-    End If
-
-    ' Formatiranje opsega za štampu (trenutna stranica)
-    printRange = CStr(currentPage)
-
-    ' Štampanje trenutne stranice u 2 primerka
-    Application.PrintOut Range:=wdPrintRangeOfPages, Pages:=printRange, Copies:=2
-
-    MsgBox "Trenutna stranica (" & printRange & ") je odštampana u 2 primerka.", vbInformation
+    ' Definišemo promenljive
+    Dim ws As Worksheet
+    
+    ' Postavljanje reference na aktivni radni list
+    Set ws = ActiveSheet
+    
+    ' Štampanje prvog primerka
+    ws.PrintOut Copies:=1
+    
+    ' Štampanje drugog primerka
+    ws.PrintOut Copies:=1
 End Sub
  
