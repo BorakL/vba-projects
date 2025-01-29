@@ -283,8 +283,8 @@ Sub proveriOtpremnicu()
         Exit Sub
     End If
     
-    ' Otkrivanje svih redova u tabeli
-    tbl2.EntireRow.Font.Hidden = False
+    ' Otkrivanje svih redova u tabeli 
+    tbl2.Rows.Hidden = False
     
     ' Kreiranje RegEx objekta
     Set regex = CreateObject("VBScript.RegExp")
