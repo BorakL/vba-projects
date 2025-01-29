@@ -10,51 +10,51 @@ Function PronadjiTabelu() As Range
     ' Početni red tabele je fiksiran na 11
     prviRed = 11
     
-    ' Pronalazak poslednjeg reda tabele (gde u koloni A piše "UKUPNO")
-    poslednjiRed = prviRed ' Početno postavljamo poslednji red na početni red
+    ' Pronalazak poslednjeg reda tabele (gde u koloni A piše "UKUPNO:")
+    poslednjiRed = prviRed
     
-    ' Prolazimo kroz redove dok ne pronađemo "UKUPNO:" ili praznu ćeliju
-    Do While ws.Cells(poslednjiRed, 1).Value <> ""
-        If ws.Cells(poslednjiRed, 1).Value = "UKUPNO:" Then
-            Exit Do
-        End If
+    ' Iteracija kroz redove dok ne pronađemo "UKUPNO:"
+    Do While ws.Cells(poslednjiRed, 1).Value <> "UKUPNO:"
         poslednjiRed = poslednjiRed + 1
     Loop
     
-    ' Ako smo pronašli "UKUPNO", postavljamo referencu na tabelu
-    If ws.Cells(poslednjiRed, 1).Value = "UKUPNO:" Then
-        Set tbl = ws.Range(ws.Cells(prviRed, 1), ws.Cells(poslednjiRed - 1, 3)) ' Ispravljena referenca na poslednji red
-    Else
-        Set tbl = Nothing ' Ako tabela nije pronađena
-    End If
+    ' Postavljanje reference na tabelu od A do C
+    Set tbl = ws.Range(ws.Cells(prviRed, 1), ws.Cells(poslednjiRed, 3))
     
+    ' Vraćanje reference na tabelu
     Set PronadjiTabelu = tbl
 End Function
 
 
 
+
 Function UpdateSum(tbl As Range)
-    Dim suma As Long
+    Dim suma As Double ' Koristi Double za bolje rukovanje decimalnim vrednostima
     Dim i As Integer
     Dim broj As String
+    Dim lastColumn As Integer
     
     suma = 0 ' Resetovanje sume na početku
     
+    ' Pronalazak poslednje kolone u tabeli koja sadrži podatke
+    lastColumn = tbl.Columns.Count
+    
     ' Iteracija kroz redove i sabiranje vrednosti iz poslednje kolone vidljivih redova
     For i = 1 To tbl.Rows.Count - 1
-        If tbl.Rows(i).Range.Font.Hidden = False Then
-            broj = Trim(tbl.Cells(i, tbl.Columns.Count).Value) ' Ispravljena referenca na Cells
-            broj = Replace(broj, Chr(13) & Chr(7), "") ' Uklanja znakove za kraj reda
+        If Not tbl.Rows(i).Hidden Then ' Proveravamo da li je red vidljiv
+            broj = Trim(tbl.Cells(i, lastColumn).Value) ' Uzimamo vrednost iz poslednje kolone
+            broj = Replace(broj, Chr(13) & Chr(7), "") ' Uklanjamo znakove za kraj reda
             
             If IsNumeric(broj) Then
-                suma = suma + CLng(broj)
+                suma = suma + CDbl(broj) ' Koristimo CDbl za rad sa decimalnim brojevima
             End If
         End If
     Next i
     
     ' Ažuriranje vrednosti u poslednjem redu (SUMA)
-    tbl.Cells(tbl.Rows.Count, tbl.Columns.Count).Value = suma ' Ispravljena referenca na Cells
+    tbl.Cells(tbl.Rows.Count, lastColumn).Value = suma ' Postavljanje sume u poslednju ćeliju
 End Function
+
 
 
 
@@ -66,6 +66,7 @@ Sub IzdvojVRFZO()
     Dim tekstPrveKolone As String
     Dim i As Integer
     Dim foundVRFZO As Boolean
+    Dim stvarniRed As Long
     
     ' Postavljanje reference na aktivni radni list
     Set ws = ActiveSheet
@@ -81,9 +82,7 @@ Sub IzdvojVRFZO()
     foundVRFZO = False
     
     ' Otkrij sve redove u tabeli
-    For i = 1 To brojRedova
-        tbl.Rows(i).EntireRow.Hidden = False
-    Next i
+    tbl.EntireRow.Hidden = False
     
     ' Provera da li postoji "VAN RFZO" u prvoj koloni
     For i = 1 To brojRedova
@@ -107,15 +106,19 @@ Sub IzdvojVRFZO()
         tekstPrveKolone = Trim(tbl.Cells(i, 1).Value)
         tekstPrveKolone = Replace(tekstPrveKolone, Chr(13) & Chr(7), "") ' Uklanja znakove za kraj reda
         
-        ' Sakrij redove koji ne sadrže "VAN RFZO", osim zadnjeg reda
-        If InStr(1, tekstPrveKolone, "VAN RFZO", vbTextCompare) = 0 And i <> brojRedova Then
-            tbl.Rows(i).EntireRow.Hidden = True
+        ' Stvarni red u radnom listu (potrebno ako tabela ne počinje od reda 1)
+        stvarniRed = tbl.Cells(i, 1).Row
+        
+        ' Sakrij redove koji ne sadrže "VAN RFZO"
+        If InStr(1, tekstPrveKolone, "VAN RFZO", vbTextCompare) = 0 Then
+            ws.Rows(stvarniRed).Hidden = True
         End If
     Next i
     
     ' Ažuriranje vrednosti Suma
     Call UpdateSum(tbl)
 End Sub
+
 
 
 
@@ -129,6 +132,7 @@ Sub IzdvojBsDbCM()
     Dim i As Integer
     Dim keywords As Variant
     Dim foundKeyword As Boolean
+    Dim stvarniRed As Long
     
     ' Ključne reči koje tražimo u tabeli
     keywords = Array("BS", "M-D", ChrW(268) & "-D", "DNEVNA")
@@ -145,10 +149,8 @@ Sub IzdvojBsDbCM()
     
     brojRedova = tbl.Rows.Count
     
-    ' Prvo otkrivanje (unhide) svih redova u tabeli
-    For i = 1 To brojRedova
-        tbl.Rows(i).EntireRow.Hidden = False
-    Next i
+    ' Otkrivanje svih redova u tabeli (jednim pozivom)
+    tbl.EntireRow.Hidden = False
     
     ' Provera da li postoji red sa ključnim rečima
     Dim hasValidRow As Boolean
@@ -187,9 +189,12 @@ Sub IzdvojBsDbCM()
             End If
         Next keyword
         
-        ' Sakrij red ako ne sadrži ključne reči i nije poslednji red
-        If Not foundKeyword And i <> brojRedova Then
-            tbl.Rows(i).EntireRow.Hidden = True
+        ' Stvarni red u radnom listu
+        stvarniRed = tbl.Cells(i, 1).Row
+        
+        ' Sakrij red ako ne sadrži ključne reči
+        If Not foundKeyword Then
+            ws.Rows(stvarniRed).Hidden = True
         End If
     Next i
     
@@ -201,7 +206,7 @@ End Sub
 
 
 
-
+ 
 Sub IzbaciBsDbVrfzo()
     Dim ws As Worksheet
     Dim tbl As Range
@@ -209,7 +214,7 @@ Sub IzbaciBsDbVrfzo()
     Dim tekstPrveKolone As String
     Dim i As Integer
     Dim keywords As Variant
-    Dim suma As Long
+    Dim stvarniRed As Long
     
     ' Ključne reči koje treba sakriti
     keywords = Array("VAN RFZO", "BS", "M-D", ChrW(268) & "-D", "DNEVNA")
@@ -223,33 +228,26 @@ Sub IzbaciBsDbVrfzo()
         MsgBox "Tabela nije pronađena!", vbExclamation
         Exit Sub
     End If
+    
     brojRedova = tbl.Rows.Count
     
-    ' Prvo otkrivanje (unhide) svih redova u tabeli
-    For i = 1 To brojRedova
-        tbl.Rows(i).EntireRow.Hidden = False
-    Next i
+    ' Otkrivanje svih redova odjednom
+    tbl.EntireRow.Hidden = False
     
     ' Iteracija kroz redove i sakrivanje onih sa ključnim rečima
     For i = 1 To brojRedova
         tekstPrveKolone = Trim(tbl.Cells(i, 1).Value)
         tekstPrveKolone = Replace(tekstPrveKolone, Chr(13) & Chr(7), "") ' Uklanja znakove za kraj reda
         
-        Dim foundKeyword As Boolean
-        foundKeyword = False
-        
         ' Provera da li red sadrži neku od ključnih reči
         For Each keyword In keywords
             If InStr(1, tekstPrveKolone, keyword, vbTextCompare) > 0 Then
-                foundKeyword = True
-                Exit For
+                ' Sakrij red ako sadrži ključnu reč
+                stvarniRed = tbl.Cells(i, 1).Row
+                ws.Rows(stvarniRed).Hidden = True
+                Exit For ' Nema potrebe da tražimo dalje u tom redu
             End If
         Next keyword
-        
-        ' Sakrij red ako sadrži ključnu reč
-        If foundKeyword Then
-            tbl.Rows(i).EntireRow.Hidden = True
-        End If
     Next i
     
     ' Ažuriranje sume koristeći funkciju UpdateSum
@@ -260,16 +258,18 @@ End Sub
 
 
 
+
 Sub proveriOtpremnicu()
     Dim doc As Worksheet
     Dim tbl2 As Range
-    Dim row As Range ' Ispravljeno tipiranje
-    Dim cell As Range ' Ispravljeno tipiranje
+    Dim row As Range
+    Dim cell As Range
     Dim kriterijumi As Object
     Dim kljuc As Variant
     Dim regex As Object
     Dim foundItems As Collection
     Dim message As String
+    Dim i As Integer
     
     ' Referenca na aktivni radni list
     Set doc = ActiveSheet
@@ -277,15 +277,19 @@ Sub proveriOtpremnicu()
     ' Referenca na tabelu
     Set tbl2 = PronadjiTabelu()
     
-    ' Prolazak kroz redove i otkrivanje (unhide) svih redova u tabeli
-    For i = 1 To tbl2.Rows.Count
-        tbl2.Rows(i).Range.Font.Hidden = False
-    Next i
+    ' Provera da li tabela postoji
+    If tbl2 Is Nothing Then
+        MsgBox "Tabela nije pronađena!", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Otkrivanje svih redova u tabeli
+    tbl2.EntireRow.Font.Hidden = False
     
     ' Kreiranje RegEx objekta
     Set regex = CreateObject("VBScript.RegExp")
     regex.IgnoreCase = True
-    regex.Global = False ' Traži prvi pogodak u tekstu
+    regex.Global = False ' Traži samo prvi pogodak u tekstu
     
     ' Kreiranje kriterijuma za pretragu
     Set kriterijumi = CreateObject("Scripting.Dictionary")
@@ -293,18 +297,12 @@ Sub proveriOtpremnicu()
     kriterijumi.Add "VAN RFZO", "VAN RFZO"
     kriterijumi.Add "DNEVNA", "DNEVNA BOLNICA"
     kriterijumi.Add "DB", "DNEVNA BOLNICA"
-    kriterijumi.Add "HEMODIJALIZA SENDVI"&ChrW(268)&"I", "DNEVNA BOLNICA"
+    kriterijumi.Add "HEMODIJALIZA SENDVI" & ChrW(268) & "I", "DNEVNA BOLNICA"
     kriterijumi.Add ChrW(268) & "-D", "CAJ"
     kriterijumi.Add "M-D", "MLEKO"
     
     ' Kolekcija za pronalaženje pogodaka
     Set foundItems = New Collection
-    
-    ' Provera da li dokument ima bar jednu tabelu
-    If doc.Tables.Count = 0 Then
-        MsgBox "Dokument ne sadrži tabele.", vbExclamation
-        Exit Sub
-    End If
     
     ' Iteracija kroz redove u tabeli
     For Each row In tbl2.Rows
@@ -315,28 +313,32 @@ Sub proveriOtpremnicu()
             
             ' Provera svakog kriterijuma
             For Each kljuc In kriterijumi.Keys
-                regex.Pattern = kljuc
+                regex.Pattern = "\b" & kljuc & "\b" ' Traženje cele reči
                 If regex.Test(cellText) Then
                     On Error Resume Next ' Sprečava duplikate u kolekciji
                     foundItems.Add kriterijumi(kljuc), CStr(kriterijumi(kljuc))
                     On Error GoTo 0
+                    Exit For ' Ako nađe podudaranje, izlazi iz unutrašnje petlje
                 End If
             Next kljuc
         Next cell
     Next row
     
-    ' Formiranje poruke
+    ' Formiranje poruke ako su pronađeni rezultati
     If foundItems.Count > 0 Then
         message = "Otpremnica sadrži:" & vbCrLf
         For Each kljuc In foundItems
             message = message & "- " & kljuc & vbCrLf
         Next kljuc
-        MsgBox message, vbInformation
+        MsgBox message, vbInformation, "Rezultat provere"
+    Else
+        MsgBox "Nema pronađenih stavki u otpremnici.", vbInformation, "Rezultat provere"
     End If
     
     ' Ažuriranje sume koristeći funkciju UpdateSum
     Call UpdateSum(tbl2)
 End Sub
+
  
  
 
