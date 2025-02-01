@@ -32,7 +32,5 @@ Sub removeRDV()
             End If
         Next j
     Next i
-    
-    MsgBox "Regex matches cleared from the worksheet!", vbInformation
 
 End Sub

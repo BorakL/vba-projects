@@ -168,3 +168,49 @@ Sub StampajOtpremnicu()
     ' Štampa samo prvu stranicu, dva primerka
     ws.PrintOut From:=1, To:=1, Copies:=2
 End Sub
+
+
+Sub removeRDV()
+    Dim regex As Object
+    Dim ws As Worksheet
+    Dim lastRow As Long, lastCol As Long
+    Dim i As Long, j As Long
+    Dim cellText As String
+    Dim pattern As String
+    
+    ' Definiši regex pattern
+    pattern = "\(\d+\-\d*[DRV]\)" ' Pokriva sve slučajeve
+    
+    ' Kreiraj regex objekat
+    Set regex = CreateObject("VBScript.RegExp")
+    regex.pattern = pattern
+    regex.Global = True ' Omogućava zamene u celoj ćeliji
+    
+    ' Koristi ActiveSheet umesto fiksnog sheet-a
+    Set ws = ActiveSheet
+    
+    ' Pronađi poslednji red i kolonu
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).row
+    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    ' Iteriraj kroz sve ćelije
+    For i = 1 To lastRow
+        For j = 1 To lastCol
+            If Not IsEmpty(ws.Cells(i, j).value) And Not IsError(ws.Cells(i, j).value) Then
+                cellText = CStr(ws.Cells(i, j).value) ' Konvertuj u string
+                
+                ' Debugging
+                Debug.Print "Original: " & cellText
+                
+                If regex.Test(cellText) Then
+                    ws.Cells(i, j).value = regex.Replace(cellText, "")
+                    Debug.Print "Izmenjeno: " & ws.Cells(i, j).value
+                End If
+            End If
+        Next j
+    Next i
+    
+    ' Oslobodi objekat
+    Set regex = Nothing
+
+End Sub
