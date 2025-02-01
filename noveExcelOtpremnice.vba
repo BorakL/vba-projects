@@ -135,7 +135,7 @@ Sub IzdvojHemodijalizaSendvici()
     Call ObojiRedovePoKriterijumima(kriterijumi)
 End Sub
 
-Sub UpdateSuma()
+Sub AzurirajSumu()
     Dim ws As Worksheet
     Dim i As Long
     Dim poslednjiRed As Long
@@ -156,10 +156,10 @@ Sub UpdateSuma()
         suma = suma + ws.Cells(i, 3).value  ' Sabira vrednosti iz kolone C (3. kolona)
     Next i
 
-    ' Prikazivanje sume u nekoj ćeliji ili u MsgBox-u
-    ' Primer: ispisivanje u ćeliji C(poslednjiRed)
-    ws.Cells(poslednjiRed, 3).value = suma ' Ažurira ukupnu sumu u poslednjem redu
+    ' Prikazivanje nove vrednosti sume u poruci
+    MsgBox "Nova suma iz kolone C je: " & suma, vbInformation, "Ukupna Suma"
 End Sub
+
 
 Sub StampajOtpremnicu()
     Dim ws As Worksheet
@@ -168,5 +168,3 @@ Sub StampajOtpremnicu()
     ' Štampa samo prvu stranicu, dva primerka
     ws.PrintOut From:=1, To:=1, Copies:=2
 End Sub
-
-
