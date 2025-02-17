@@ -1,3 +1,10 @@
+Public Const prviRed As Integer = 11
+Public Const zadnjiRedKriterijum As String = "UKUPNO:"
+Public Const prvaKolona As Integer = 1
+Public Const zadnjaKolona As Integer = 3
+Public Const prvaKolonaOznaka As String = "A"
+Public Const zadnjaKolonaOznaka As String = "C"
+
 Function PronadjiPoslednjiRed() As Long
     Dim ws As Worksheet
     Dim poslednjiRed As Long
@@ -6,10 +13,10 @@ Function PronadjiPoslednjiRed() As Long
     Set ws = ActiveSheet ' Možeš promeniti na konkretan list ako je potrebno
     
     ' Početni red je fiksiran na 11
-    poslednjiRed = 11
+    poslednjiRed = prviRed
     
     ' Pronalazak poslednjeg reda tabele (gde u koloni A piše "UKUPNO:")
-    Do While ws.Cells(poslednjiRed, 1).value <> "UKUPNO:" And Not IsEmpty(ws.Cells(poslednjiRed, 1).value)
+    Do While ws.Cells(poslednjiRed, prvaKolona).value <> zadnjiRedKriterijum And Not IsEmpty(ws.Cells(poslednjiRed, prvaKolona).value)
         poslednjiRed = poslednjiRed + 1
     Loop
     
@@ -31,13 +38,13 @@ Sub ObojiRedovePoKriterijumima(kriterijumi As Variant)
     poslednjiRed = PronadjiPoslednjiRed()
     
     ' Iteracija kroz kolonu A (A11:A(poslednjiRed))
-    For i = 11 To poslednjiRed
+    For i = prviRed To poslednjiRed
         ' Provera za svaki kriterijum u nizu
         For j = LBound(kriterijumi) To UBound(kriterijumi)
             ' Proverava da li tekst u celiji sadrži kriterijum (ne mora da bude tačno)
-            If InStr(1, ws.Cells(i, 1).value, kriterijumi(j), vbTextCompare) > 0 Then
+            If InStr(1, ws.Cells(i, prvaKolona).value, kriterijumi(j), vbTextCompare) > 0 Then
                 ' Ako pronađe kriterijum, boji ceo red (A do C) u svetložutu boju
-                ws.Range("A" & i & ":C" & i).Interior.Color = RGB(255, 255, 153)
+                ws.Range(prvaKolonaOznaka & i & ":" & zadnjaKolonaOznaka & i).Interior.Color = RGB(255, 255, 153)
                 pronadjeno = True ' Obeležavamo da je bar jedan kriterijum pronađen
                 Exit For ' Prekidamo unutrašnju petlju jer smo već našli podudaranje
             End If
@@ -57,8 +64,7 @@ Sub ProveriPodatke()
     Dim cellValue As String
     Dim foundItems As Object
     Dim key As Variant
-    Dim message As String
-    Dim prviRed As Long
+    Dim message As String 
     Dim poslednjiRed As Long
     Dim opseg As Range
     Dim dataObj As Object
@@ -66,7 +72,6 @@ Sub ProveriPodatke()
     ' Postavljanje reference na radni list
     Set ws = ActiveSheet ' Može se promeniti u konkretan list, npr. ThisWorkbook.Sheets("Sheet1")
     
-    prviRed = 11
     poslednjiRed = PronadjiPoslednjiRed()
     
     ' Kreiranje rečnika sa ključnim rečima i porukama
@@ -74,10 +79,9 @@ Sub ProveriPodatke()
     foundItems.Add "BS", "Ima bistra supa"
     foundItems.Add "DB", "Ima dnevna bolnica"
     foundItems.Add "VAN RFZO", "Ima van RFZO"
-    foundItems.Add "DNEVNA", "Ima dnevna usluga"
+    foundItems.Add "DNEVNA", "Ima dnevna bolnica"
     foundItems.Add "M-D", "Ima mleko"
     foundItems.Add ChrW(268) & "-D", "Ima čaj" ' ASCII karakter za Č
-    foundItems.Add "HEMODIJALIZA SENDVI" & ChrW(268) & "I", "Ima hemodijaliza sendviči. Ako je Punkt 1 prepravi u DNEVNA BOLNICA"
 
     ' Kreiranje skupa za pronađene stavke
     Dim results As Object
@@ -87,6 +91,12 @@ Sub ProveriPodatke()
     For i = prviRed To poslednjiRed - 1
         For j = 1 To 3 ' Kolone A (1), B (2), C (3)
             cellValue = ws.Cells(i, j).value
+
+            ' Ako je vrednost "HEMODIJALIZA SENDVIČI", promeni u "DNEVNA BOLNICA"
+            If InStr(1, cellValue, "HEMODIJALIZA SENDVI" & ChrW(268) & "I", vbTextCompare) > 0 Then
+                cellValue = Replace(cellValue, "HEMODIJALIZA SENDVI" & ChrW(268) & "I", "DNEVNA BOLNICA", 1, -1, vbTextCompare)
+                ws.Cells(i, j).value = cellValue
+            End If
             
             ' Provera svih ključnih reči
             For Each key In foundItems.Keys
@@ -129,35 +139,41 @@ Sub IzdvojDnevnuBolnicu()
     Call ObojiRedovePoKriterijumima(kriterijumi)
 End Sub
 
-Sub IzdvojHemodijalizaSendvici()
-    Dim kriterijumi As Variant
-    kriterijumi = Array("HEMODIJALIZA SENDVI" & ChrW(268) & "I")
-    Call ObojiRedovePoKriterijumima(kriterijumi)
-End Sub
 
 Sub AzurirajSumu()
     Dim ws As Worksheet
     Dim i As Long
     Dim poslednjiRed As Long
     Dim suma As Double
-
+    Dim staraVrednost As Double
+    Dim sumaCelija As Range
+    
     ' Postavljanje reference na aktivni radni list
     Set ws = ActiveSheet
 
     ' Pronalazi poslednji red
     poslednjiRed = PronadjiPoslednjiRed()
 
+    ' Postavljanje reference na ćeliju gde je suma (pretpostavljam da je poslednji red, kolona C)
+    Set sumaCelija = ws.Cells(poslednjiRed, zadnjaKolona)
+
+    ' Čuvanje stare vrednosti sume
+    staraVrednost = sumaCelija.value
+
     ' Inicijalizacija sume
     suma = 0
 
     ' Iteracija kroz redove od 11 do poslednjiRed - 1
-    For i = 11 + 1 To poslednjiRed - 1 ' Ne uključuje poslednji red (gde je UKUPNO)
-        ws.Range("A" & i & ":C" & i).Interior.ColorIndex = xlNone   ' Brišemo boju pozadine svih ćelija u redu (A do C)
-        suma = suma + ws.Cells(i, 3).value  ' Sabira vrednosti iz kolone C (3. kolona)
+    For i = prviRed + 1 To poslednjiRed - 1 ' Ne uključuje poslednji red (gde je UKUPNO)
+        ws.Range(prvaKolonaOznaka & i & ":" & zadnjaKolonaOznaka & i).Interior.ColorIndex = xlNone   ' Brišemo boju pozadine svih ćelija u redu (A do C)
+        suma = suma + ws.Cells(i, zadnjaKolona).value  ' Sabira vrednosti iz kolone C (3. kolona)
     Next i
 
-    ' Prikazivanje nove vrednosti sume u poruci
-    MsgBox "Nova suma iz kolone C je: " & suma, vbInformation, "Ukupna Suma"
+    ' Ažuriranje sume u tabeli
+    sumaCelija.value = suma
+
+    ' Prikazivanje poruke sa starom i novom vrednošću
+    MsgBox "Vrednost sume je promenjena sa " & staraVrednost & " na " & suma, vbInformation, "Ukupna Suma"
 End Sub
 
 
