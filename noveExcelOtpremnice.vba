@@ -81,6 +81,7 @@ Sub ProveriPodatke()
     foundItems.Add "VAN RFZO", "Ima van RFZO"
     foundItems.Add "DNEVNA", "Ima dnevna bolnica"
     foundItems.Add "M-D", "Ima mleko"
+    foundItems.Add "HD", "Ima HD. Izdvoji ako je KOŽNO!"
     foundItems.Add ChrW(268) & "-D", "Ima čaj" ' ASCII karakter za Č
 
     ' Kreiranje skupa za pronađene stavke
@@ -96,6 +97,7 @@ Sub ProveriPodatke()
             If InStr(1, cellValue, "HEMODIJALIZA SENDVI" & ChrW(268) & "I", vbTextCompare) > 0 Then
                 cellValue = Replace(cellValue, "HEMODIJALIZA SENDVI" & ChrW(268) & "I", "DNEVNA BOLNICA", 1, -1, vbTextCompare)
                 ws.Cells(i, j).value = cellValue
+                MsgBox "HEMODIJALIZA SENDVICI je prepravljen u DNEVNA BOLNICA! Sačuvaj fajl."
             End If
             
             ' Provera svih ključnih reči
@@ -123,7 +125,7 @@ End Sub
 
 Sub IzdvojSpecijalneObroke()
     Dim kriterijumi As Variant
-    kriterijumi = Array("BS", "M-D", ChrW(268) & "-D") ' Kriterijumi za specijalne obroke
+    kriterijumi = Array("BS", "M-D", "HD", ChrW(268) & "-D") ' Kriterijumi za specijalne obroke
     Call ObojiRedovePoKriterijumima(kriterijumi)
 End Sub
 
@@ -180,9 +182,15 @@ End Sub
 Sub StampajOtpremnicu()
     Dim ws As Worksheet
     Set ws = ActiveSheet ' Možeš promeniti na konkretan sheet ako je potrebno
-
-    ' Štampa samo prvu stranicu, dva primerka
-    ws.PrintOut From:=1, To:=1, Copies:=2
+    
+    With ws.PageSetup
+        .Zoom = False ' Isključuje ručno skaliranje
+        .FitToPagesWide = 1 ' Smanjuje širinu na 1 stranicu
+        .FitToPagesTall = 1 ' Smanjuje visinu na 1 stranicu
+    End With
+    
+    ' Štampa sve na jednu stranicu, dva primerka
+    ws.PrintOut Copies:=2
 End Sub
 
 
